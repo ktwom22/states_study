@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Algebra Arena ⚡</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -15,6 +15,7 @@
       --success: #10B981;
       --danger: #EF4444;
       --text: #1E293B;
+      --board-bg: #1E293B;
     }
     * {
       box-sizing: border-box;
@@ -30,13 +31,13 @@
       align-items: center;
       min-height: 100vh;
       margin: 0;
-      padding: 16px;
+      padding: 12px 12px 100px 12px; /* padding-bottom so bottom slider doesn't overlap controls */
       touch-action: manipulation;
     }
     .nav-toggle {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       background: #E2E8F0;
       padding: 6px;
       border-radius: 16px;
@@ -60,29 +61,30 @@
     .game-card {
       background: var(--card);
       border-radius: 24px;
-      padding: 24px;
+      padding: 20px;
       width: 100%;
-      max-width: 480px;
+      max-width: 490px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       text-align: center;
+      position: relative;
     }
     h1 {
       font-family: 'Fredoka One', cursive;
       color: var(--primary);
-      margin: 0 0 12px 0;
-      font-size: 1.8rem;
+      margin: 0 0 10px 0;
+      font-size: 1.7rem;
     }
     .level-pills {
       display: flex;
       justify-content: center;
       gap: 6px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .lvl-btn {
       background: #F1F5F9;
       border: 1.5px solid #CBD5E1;
       border-radius: 20px;
-      padding: 6px 12px;
+      padding: 5px 12px;
       font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
@@ -99,96 +101,196 @@
       justify-content: space-around;
       background: #EEF2FF;
       border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 16px;
+      padding: 8px;
+      margin-bottom: 12px;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
+
+    /* EQUATION BOARD */
     .equation-board {
-      background: #1E293B;
+      background: var(--board-bg);
       color: #38BDF8;
       border-radius: 16px;
-      height: 120px;
+      padding: 14px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 12px;
-      box-shadow: inset 0 4px 10px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.25);
     }
     .sub-tag {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #94A3B8;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .eq-text {
       font-family: 'Fredoka One', cursive;
-      font-size: 2.2rem;
-      letter-spacing: 2px;
+      font-size: 2.1rem;
+      letter-spacing: 1.5px;
     }
 
-    /* TOOL BAR & SCRATCHPAD */
-    .tools-bar {
+    /* WORKSPACE & UTILITY BUTTONS */
+    .utility-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .util-btn {
+      flex: 1;
+      background: #F8FAFC;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 12px;
+      padding: 9px 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .util-btn.active {
+      background: #EEF2FF;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* COLLAPSIBLE SCRATCHPAD WORKSPACE */
+    .scratch-collapse {
+      display: none;
+      background: #0F172A;
+      border: 2px solid #334155;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      text-align: left;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .scratch-collapse.open {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .scratch-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
-      padding: 0 4px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
     }
-    .tool-btn {
-      background: #EEF2FF;
-      color: var(--primary);
-      border: 1px solid #C7D2FE;
-      border-radius: 10px;
-      padding: 6px 12px;
-      font-size: 0.85rem;
+    .sticky-problem-label {
+      font-size: 0.75rem;
+      color: #94A3B8;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .sticky-problem-eq {
+      font-family: 'Fredoka One', cursive;
+      color: #38BDF8;
+      font-size: 1.35rem;
+    }
+    .scratch-modes {
+      display: flex;
+      gap: 6px;
+    }
+    .mini-btn {
+      background: #1E293B;
+      color: #94A3B8;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
-      transition: 0.15s;
     }
-    .tool-btn:hover {
-      background: #E0E7FF;
-    }
-    .scratchpad-container {
-      position: relative;
-      background: #0F172A;
-      border: 2px dashed #475569;
-      border-radius: 14px;
-      height: 140px;
-      margin-bottom: 14px;
-      overflow: hidden;
-      touch-action: none; /* Crucial for stylus/finger drawing */
-    }
-    #scratchpad {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: crosshair;
-    }
-    .scratch-hint {
-      position: absolute;
-      top: 8px;
-      left: 12px;
-      font-size: 0.75rem;
-      color: #64748B;
-      pointer-events: none;
-      font-weight: 700;
+    .mini-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
     }
 
+    /* STEP-BUILDER VIEW */
+    .step-log {
+      min-height: 50px;
+      max-height: 110px;
+      overflow-y: auto;
+      font-family: 'Fredoka One', cursive;
+      color: #F8FAFC;
+      font-size: 1.15rem;
+      line-height: 1.6;
+      padding-left: 4px;
+    }
+    .step-log div {
+      border-bottom: 1px dashed rgba(255,255,255,0.08);
+      padding: 2px 0;
+    }
+    .action-chips-title {
+      font-size: 0.75rem;
+      color: #94A3B8;
+      font-weight: 700;
+      margin: 8px 0 6px 0;
+      text-transform: uppercase;
+    }
+    .action-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip-btn {
+      background: #1E293B;
+      color: #FBBF24;
+      border: 1.5px solid #F59E0B;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .chip-btn:active {
+      transform: scale(0.92);
+      background: #F59E0B;
+      color: #000;
+    }
+
+    /* CANVAS FREEHAND VIEW */
+    .canvas-wrap {
+      display: none;
+      height: 140px;
+      position: relative;
+      background: #0B0F19;
+      border-radius: 10px;
+      touch-action: none;
+    }
+    #freehand-canvas {
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* ANSWER OPTIONS */
     .options-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     button.opt-btn {
       background: #F8FAFC;
       border: 2px solid #CBD5E1;
       border-radius: 14px;
-      padding: 14px 8px;
+      padding: 13px 8px;
       font-size: 1.3rem;
       font-family: 'Fredoka One', cursive;
       color: var(--text);
@@ -213,12 +315,12 @@
     .hint-box {
       font-size: 0.95rem;
       color: #475569;
-      min-height: 40px;
-      margin-bottom: 12px;
+      min-height: 38px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      line-height: 1.35;
+      line-height: 1.3;
     }
     .btn-hint {
       background: none;
@@ -226,7 +328,7 @@
       color: var(--accent);
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       text-decoration: underline;
     }
     .btn-next {
@@ -234,7 +336,7 @@
       color: white;
       border: none;
       border-radius: 12px;
-      padding: 14px 24px;
+      padding: 13px 20px;
       font-weight: 700;
       font-size: 1.05rem;
       cursor: pointer;
@@ -242,59 +344,94 @@
       display: none;
     }
 
-    /* POP-UP CALCULATOR MODAL */
-    .calc-modal {
-      display: none;
+    /* DOCKED BOTTOM SLIDE-UP CALCULATOR DRAWER (Never covers top problems) */
+    .calc-drawer {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 999;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-    }
-    .calc-modal.open {
+      bottom: -360px; /* Hidden below viewport */
+      left: 0;
+      right: 0;
       display: flex;
+      justify-content: center;
+      transition: bottom 0.28s cubic-bezier(0.1, 0.9, 0.2, 1);
+      z-index: 1000;
+      pointer-events: none;
     }
-    .calc-body {
+    .calc-drawer.open {
+      bottom: 0;
+      pointer-events: auto;
+    }
+    .calc-box {
       background: #FFFFFF;
       width: 100%;
-      max-width: 320px;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      max-width: 440px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
+      padding: 12px 16px 20px 16px;
+      border: 1.5px solid #CBD5E1;
+      border-bottom: none;
+    }
+    .calc-handle {
+      width: 40px;
+      height: 4px;
+      background: #CBD5E1;
+      border-radius: 4px;
+      margin: 0 auto 10px auto;
+      cursor: pointer;
+    }
+    .calc-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .calc-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+    }
+    .calc-close-icon {
+      background: #F1F5F9;
+      border: none;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748B;
+      cursor: pointer;
     }
     .calc-screen {
-      background: #F1F5F9;
-      border-radius: 12px;
-      padding: 12px 16px;
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 8px 12px;
       font-family: 'Fredoka One', cursive;
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       text-align: right;
       color: #0F172A;
-      margin-bottom: 16px;
-      min-height: 54px;
+      margin-bottom: 10px;
+      min-height: 44px;
       overflow-x: auto;
     }
     .calc-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
     .calc-key {
       background: #F8FAFC;
       border: 1.5px solid #E2E8F0;
-      border-radius: 10px;
-      padding: 14px 0;
-      font-size: 1.2rem;
+      border-radius: 8px;
+      padding: 10px 0;
+      font-size: 1.15rem;
       font-weight: 700;
       cursor: pointer;
-      transition: 0.1s;
     }
     .calc-key:active {
-      transform: scale(0.95);
       background: #E2E8F0;
+      transform: scale(0.96);
     }
     .calc-key.op {
       background: #EEF2FF;
@@ -305,17 +442,6 @@
       background: var(--primary);
       color: white;
       border-color: var(--primary);
-    }
-    .calc-close-btn {
-      width: 100%;
-      margin-top: 12px;
-      padding: 10px;
-      background: #F1F5F9;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      color: #64748B;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -342,21 +468,47 @@
     <div>🔥 Streak: <span id="streak">0</span></div>
   </div>
 
+  <!-- MAIN EQUATION DISPLAY (Always stays visible) -->
   <div class="equation-board">
     <div class="sub-tag">Find the value of x</div>
     <div class="eq-text" id="eq-text">...</div>
   </div>
 
-  <!-- TOOLBAR: Clear Canvas & Open Calculator -->
-  <div class="tools-bar">
-    <button class="tool-btn" onclick="openCalc()">🧮 Calculator</button>
-    <button class="tool-btn" onclick="clearCanvas()">🗑️ Clear Pad</button>
+  <!-- WORKSPACE & CALCULATOR TOGGLES -->
+  <div class="utility-bar">
+    <button class="util-btn" id="scratch-toggle-btn" onclick="toggleScratchpad()">
+      <span>✏️</span> <span id="scratch-toggle-label">Open Scratchpad</span>
+    </button>
+    <button class="util-btn" id="calc-toggle-btn" onclick="toggleCalculator()">
+      <span>🧮</span> <span>Calculator</span>
+    </button>
   </div>
 
-  <!-- DIGITAL TOUCH SCRATCHPAD -->
-  <div class="scratchpad-container">
-    <div class="scratch-hint" id="pad-hint">✏️ Use finger or pencil to work out steps</div>
-    <canvas id="scratchpad"></canvas>
+  <!-- COLLAPSIBLE WORKSPACE WITH STICKY PROBLEM HEADER -->
+  <div class="scratch-collapse" id="scratch-workspace">
+    <div class="scratch-header">
+      <div>
+        <div class="sticky-problem-label">Current Problem</div>
+        <div class="sticky-problem-eq" id="sticky-eq">...</div>
+      </div>
+      <div class="scratch-modes">
+        <button class="mini-btn active" id="btn-mode-steps" onclick="switchWorkMode('steps')">Steps</button>
+        <button class="mini-btn" id="btn-mode-pen" onclick="switchWorkMode('pen')">Draw</button>
+        <button class="mini-btn" onclick="resetWorkspace()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Mode A: Tap-to-step inverse operations -->
+    <div id="step-builder-view">
+      <div class="step-log" id="step-log"></div>
+      <div class="action-chips-title">Tap an inverse operation:</div>
+      <div class="action-chips" id="action-chips"></div>
+    </div>
+
+    <!-- Mode B: Freehand chalk canvas -->
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="freehand-canvas"></canvas>
+    </div>
   </div>
 
   <div class="hint-box" id="hint-box">
@@ -368,9 +520,14 @@
   <button class="btn-next" id="btn-next" onclick="loadNext()">Next Problem ➔</button>
 </div>
 
-<!-- POP-UP CALCULATOR DRAWER -->
-<div class="calc-modal" id="calc-modal" onclick="closeCalcOnOutside(event)">
-  <div class="calc-body" onclick="event.stopPropagation()">
+<!-- DOCKED BOTTOM SLIDE-UP CALCULATOR -->
+<div class="calc-drawer" id="calc-drawer">
+  <div class="calc-box">
+    <div class="calc-handle" onclick="toggleCalculator()"></div>
+    <div class="calc-top-row">
+      <span class="calc-title">Quick Calculator</span>
+      <button class="calc-close-icon" onclick="toggleCalculator()">✕</button>
+    </div>
     <div class="calc-screen" id="calc-display">0</div>
     <div class="calc-grid">
       <button class="calc-key op" onclick="calcInput('C')">C</button>
@@ -397,7 +554,6 @@
       <button class="calc-key" onclick="calcInput('.')">.</button>
       <button class="calc-key op" onclick="toggleCalcSign()">±</button>
     </div>
-    <button class="calc-close-btn" onclick="closeCalc()">Done / Back to Problem</button>
   </div>
 </div>
 
@@ -406,79 +562,121 @@
   let currentLevel = '1';
   let score = 0;
   let streak = 0;
+  let workMode = 'steps';
 
-  // --- SCRATCHPAD LOGIC (Canvas) ---
-  const canvas = document.getElementById('scratchpad');
+  // 1. COLLAPSE / EXPAND SCRATCHPAD WORKSPACE
+  function toggleScratchpad() {
+    const ws = document.getElementById('scratch-workspace');
+    const btn = document.getElementById('scratch-toggle-btn');
+    const label = document.getElementById('scratch-toggle-label');
+    const isOpen = ws.classList.toggle('open');
+
+    btn.classList.toggle('active', isOpen);
+    label.innerText = isOpen ? "Hide Workspace" : "Open Scratchpad";
+
+    if (isOpen && workMode === 'pen') {
+      setTimeout(resizeCanvas, 50);
+    }
+  }
+
+  // 2. SLIDE UP / DOWN BOTTOM CALCULATOR (Does not block the problem)
+  function toggleCalculator() {
+    const drawer = document.getElementById('calc-drawer');
+    const btn = document.getElementById('calc-toggle-btn');
+    const isOpen = drawer.classList.toggle('open');
+    btn.classList.toggle('active', isOpen);
+  }
+
+  // 3. STEP-BY-STEP TAP WORKSPACE LOGIC
+  function setupStepWorkspace(eq) {
+    document.getElementById('sticky-eq').innerText = eq;
+    const log = document.getElementById('step-log');
+    log.innerHTML = `<div>Step 1: ${eq}</div>`;
+
+    // Extract all numbers from the equation to suggest relevant inverse actions
+    const numbers = Array.from(new Set(eq.match(/\d+/g) || [])).slice(0, 4);
+    const chipsBox = document.getElementById('action-chips');
+    chipsBox.innerHTML = '';
+
+    numbers.forEach(num => {
+      // Create + / - / ÷ chips for each number
+      ['- ', '+ ', '÷ ', '× '].forEach(op => {
+        const chip = document.createElement('button');
+        chip.className = 'chip-btn';
+        chip.innerText = `${op}${num}`;
+        chip.onclick = () => applyStepAction(`${op}${num}`);
+        chipsBox.appendChild(chip);
+      });
+    });
+  }
+
+  function applyStepAction(action) {
+    const log = document.getElementById('step-log');
+    const stepCount = log.children.length + 1;
+    const newDiv = document.createElement('div');
+    newDiv.innerHTML = `Step ${stepCount}: applied (${action}) on both sides`;
+    log.appendChild(newDiv);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function resetWorkspace() {
+    setupStepWorkspace(current.equation);
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function switchWorkMode(mode) {
+    workMode = mode;
+    document.getElementById('btn-mode-steps').classList.toggle('active', mode === 'steps');
+    document.getElementById('btn-mode-pen').classList.toggle('active', mode === 'pen');
+    document.getElementById('step-builder-view').style.display = (mode === 'steps') ? 'block' : 'none';
+    document.getElementById('canvas-wrap').style.display = (mode === 'pen') ? 'block' : 'none';
+    if (mode === 'pen') resizeCanvas();
+  }
+
+  // 4. FREEHAND CHALK CANVAS (Optional fallback)
+  const canvas = document.getElementById('freehand-canvas');
   const ctx = canvas.getContext('2d');
   let isDrawing = false;
 
   function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
-    ctx.strokeStyle = '#FBBF24'; // Bright yellow chalk/pencil
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
   }
-  window.addEventListener('resize', resizeCanvas);
 
   function getCanvasPos(e) {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: cx - rect.left, y: cy - rect.top };
   }
 
   function startDraw(e) {
     isDrawing = true;
-    document.getElementById('pad-hint').style.display = 'none';
-    const pos = getCanvasPos(e);
+    const p = getCanvasPos(e);
     ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
+    ctx.moveTo(p.x, p.y);
   }
-
   function draw(e) {
     if (!isDrawing) return;
-    const pos = getCanvasPos(e);
-    ctx.lineTo(pos.x, pos.y);
+    const p = getCanvasPos(e);
+    ctx.lineTo(p.x, p.y);
     ctx.stroke();
   }
-
-  function endDraw() {
-    isDrawing = false;
-  }
+  function endDraw() { isDrawing = false; }
 
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('mousemove', draw);
   window.addEventListener('mouseup', endDraw);
-
   canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
   canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
   canvas.addEventListener('touchend', endDraw);
 
-  function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('pad-hint').style.display = 'block';
-  }
-
-  // --- CALCULATOR POP-UP LOGIC ---
+  // 5. CALCULATOR ARITHMETIC ENGINE
   let calcExpression = '0';
-
-  function openCalc() {
-    document.getElementById('calc-modal').classList.add('open');
-  }
-
-  function closeCalc() {
-    document.getElementById('calc-modal').classList.remove('open');
-  }
-
-  function closeCalcOnOutside(e) {
-    if (e.target.id === 'calc-modal') closeCalc();
-  }
-
   function calcInput(char) {
     const display = document.getElementById('calc-display');
     if (char === 'C') {
@@ -498,12 +696,11 @@
   function calcCalculate() {
     const display = document.getElementById('calc-display');
     try {
-      // Safe sanitized arithmetic evaluation
       const sanitized = calcExpression.replace(/[^0-9+\-*/.]/g, '');
       const result = Function(`'use strict'; return (${sanitized})`)();
       calcExpression = String(Math.round(result * 1000) / 1000);
       display.innerText = calcExpression;
-    } catch (err) {
+    } catch {
       display.innerText = 'Error';
       calcExpression = '0';
     }
@@ -518,7 +715,7 @@
     document.getElementById('calc-display').innerText = calcExpression;
   }
 
-  // --- QUESTION & GAME STATE LOGIC ---
+  // 6. QUESTION & GAMEPLAY FLOW
   function setLevel(lvl, btn) {
     currentLevel = lvl;
     document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
@@ -527,7 +724,6 @@
   }
 
   async function loadNext() {
-    clearCanvas();
     document.getElementById('btn-next').style.display = 'none';
     document.getElementById('hint-box').innerHTML = '<button class="btn-hint" onclick="revealHint()">💡 Need a balancing clue?</button>';
 
@@ -535,6 +731,7 @@
     current = await res.json();
 
     document.getElementById('eq-text').innerText = current.equation;
+    setupStepWorkspace(current.equation);
 
     const optionsGrid = document.getElementById('options');
     optionsGrid.innerHTML = '';
@@ -572,8 +769,6 @@
     document.getElementById('hint-box').innerHTML = current.hint;
   }
 
-  // Initialize Canvas dimensions and load the first question
-  resizeCanvas();
   loadNext();
 </script>
 </body>
