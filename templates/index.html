@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>State Shape Detective 🔍</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- D3 and TopoJSON -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --card: #FFFFFF;
+      --primary: #4F46E5;
+      --accent: #F59E0B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --text: #1E293B;
+    }
+    * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+    .nav-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: #E2E8F0;
+      padding: 6px;
+      border-radius: 16px;
+    }
+    .nav-toggle a {
+      text-decoration: none;
+      color: #64748B;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .nav-toggle a.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .game-card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 1.8rem;
+    }
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: #EEF2FF;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .shape-container {
+      background: #FAFAFA;
+      border: 3px dashed #CBD5E1;
+      border-radius: 16px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      padding: 10px;
+      position: relative;
+    }
+    #state-canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .state-path {
+      fill: #4F46E5;
+      stroke: #312E81;
+      stroke-width: 1.5;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+      transition: fill 0.3s ease;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    button.opt-btn {
+      background: #F8FAFC;
+      border: 2px solid #CBD5E1;
+      border-radius: 12px;
+      padding: 12px 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button.opt-btn:hover:not(:disabled) {
+      background: #EEF2FF;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    button.correct {
+      background-color: var(--success) !important;
+      border-color: var(--success) !important;
+      color: #fff !important;
+    }
+    button.wrong {
+      background-color: var(--danger) !important;
+      border-color: var(--danger) !important;
+      color: #fff !important;
+    }
+    .hint-box {
+      font-size: 0.95rem;
+      color: #475569;
+      min-height: 42px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-hint {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: underline;
+    }
+    .btn-next {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      width: 100%;
+      display: none;
+    }
+    #loading-msg {
+      font-size: 1rem;
+      color: #94A3B8;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-toggle">
+  <a href="/" class="active">🔍 Single Shape Mode</a>
+  <a href="/map">🗺️ Full Map Mode</a>
+</div>
+
+<div class="game-card">
+  <h1>State Shape Detective 🔍</h1>
+
+  <div class="stats-bar">
+    <div>⭐ Score: <span id="score">0</span></div>
+    <div>🔥 Streak: <span id="streak">0</span></div>
+  </div>
+
+  <div class="shape-container">
+    <div id="loading-msg">Loading exact US map shapes...</div>
+    <svg id="state-canvas" style="display:none;"></svg>
+  </div>
+
+  <div class="hint-box" id="hint-box">
+    <button class="btn-hint" onclick="revealHint()">💡 Need a memory clue?</button>
+  </div>
+
+  <div class="options-grid" id="options"></div>
+
+  <button class="btn-next" id="btn-next" onclick="loadNext()">Next State ➔</button>
+</div>
+
+<script>
+  let stateFeatures = {};
+  let current = {};
+  let score = 0;
+  let streak = 0;
+
+  async function initMapData() {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
+    const us = await res.json();
+    const statesGeo = topojson.feature(us, us.objects.states).features;
+
+    statesGeo.forEach(f => {
+      stateFeatures[f.properties.name] = f;
+    });
+
+    document.getElementById('loading-msg').style.display = 'none';
+    document.getElementById('state-canvas').style.display = 'block';
+
+    loadNext();
+  }
+
+  function renderState(stateName) {
+    const feature = stateFeatures[stateName];
+    const svg = d3.select("#state-canvas");
+    svg.selectAll("*").remove();
+
+    const width = 380;
+    const height = 230;
+    const padding = 24;
+    svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+    const projection = d3.geoMercator()
+      .fitExtent([[padding, padding], [width - padding, height - padding]], feature);
+
+    const pathGenerator = d3.geoPath().projection(projection);
+
+    svg.append("path")
+      .datum(feature)
+      .attr("class", "state-path")
+      .attr("id", "current-path")
+      .attr("d", pathGenerator);
+  }
+
+  async function loadNext() {
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('hint-box').innerHTML = '<button class="btn-hint" onclick="revealHint()">💡 Need a memory clue?</button>';
+
+    const res = await fetch('/api/question');
+    current = await res.json();
+
+    renderState(current.name);
+
+    const optionsGrid = document.getElementById('options');
+    optionsGrid.innerHTML = '';
+    current.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerText = opt;
+      btn.onclick = () => selectOption(btn, opt);
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectOption(button, chosen) {
+    const allButtons = document.querySelectorAll('.opt-btn');
+    allButtons.forEach(b => b.disabled = true);
+
+    const path = d3.select("#current-path");
+
+    if (chosen === current.name) {
+      button.classList.add('correct');
+      path.style('fill', '#10B981');
+      score += 10;
+      streak += 1;
+    } else {
+      button.classList.add('wrong');
+      path.style('fill', '#EF4444');
+      streak = 0;
+      allButtons.forEach(b => {
+        if (b.innerText === current.name) b.classList.add('correct');
+      });
+    }
+
+    document.getElementById('score').innerText = score;
+    document.getElementById('streak').innerText = streak;
+    document.getElementById('btn-next').style.display = 'block';
+  }
+
+  function revealHint() {
+    document.getElementById('hint-box').innerHTML = `<strong>Clue:</strong> ${current.hint}`;
+  }
+
+  initMapData();
+</script>
+</body>
+</html>

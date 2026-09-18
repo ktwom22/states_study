@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>US Map Mystery State 🗺️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --card: #FFFFFF;
+      --primary: #4F46E5;
+      --accent: #F59E0B;
+      --highlight: #FBBF24;
+      --success: #10B981;
+      --danger: #EF4444;
+      --text: #1E293B;
+    }
+    * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+    .nav-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: #E2E8F0;
+      padding: 6px;
+      border-radius: 16px;
+    }
+    .nav-toggle a {
+      text-decoration: none;
+      color: #64748B;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .nav-toggle a.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .game-card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      color: var(--primary);
+      margin: 0 0 12px 0;
+      font-size: 1.8rem;
+    }
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: #EEF2FF;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .map-container {
+      background: #F8FAFC;
+      border: 3px dashed #CBD5E1;
+      border-radius: 16px;
+      height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    #us-map {
+      width: 100%;
+      height: 100%;
+    }
+    .state-default {
+      fill: #CBD5E1;
+      stroke: #FFFFFF;
+      stroke-width: 1;
+      transition: fill 0.3s ease;
+    }
+    .state-target {
+      fill: var(--highlight) !important;
+      stroke: #B45309 !important;
+      stroke-width: 2 !important;
+      filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+      animation: pulse 1.5s infinite alternate ease-in-out;
+    }
+    @keyframes pulse {
+      0% { fill: #FBBF24; }
+      100% { fill: #F59E0B; }
+    }
+    .state-won {
+      fill: var(--success) !important;
+      stroke: #065F46 !important;
+      stroke-width: 2 !important;
+    }
+    .state-lost {
+      fill: var(--danger) !important;
+      stroke: #991B1B !important;
+      stroke-width: 2 !important;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    button.opt-btn {
+      background: #F8FAFC;
+      border: 2px solid #CBD5E1;
+      border-radius: 12px;
+      padding: 12px 8px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button.opt-btn:hover:not(:disabled) {
+      background: #EEF2FF;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    button.correct {
+      background-color: var(--success) !important;
+      border-color: var(--success) !important;
+      color: #fff !important;
+    }
+    button.wrong {
+      background-color: var(--danger) !important;
+      border-color: var(--danger) !important;
+      color: #fff !important;
+    }
+    .hint-box {
+      font-size: 0.95rem;
+      color: #475569;
+      min-height: 38px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-hint {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: underline;
+    }
+    .btn-next {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      width: 100%;
+      display: none;
+    }
+    #loading-msg {
+      font-size: 1rem;
+      color: #94A3B8;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-toggle">
+  <a href="/">🔍 Single Shape Mode</a>
+  <a href="/map" class="active">🗺️ Full Map Mode</a>
+</div>
+
+<div class="game-card">
+  <h1>Find the Glowing State! 🗺️</h1>
+
+  <div class="stats-bar">
+    <div>⭐ Score: <span id="score">0</span></div>
+    <div>🔥 Streak: <span id="streak">0</span></div>
+  </div>
+
+  <div class="map-container">
+    <div id="loading-msg">Drawing Full USA Map...</div>
+    <svg id="us-map" viewBox="0 0 960 600" style="display:none;"></svg>
+  </div>
+
+  <div class="hint-box" id="hint-box">
+    <button class="btn-hint" onclick="revealHint()">💡 Need a memory clue?</button>
+  </div>
+
+  <div class="options-grid" id="options"></div>
+
+  <button class="btn-next" id="btn-next" onclick="loadNext()">Next State ➔</button>
+</div>
+
+<script>
+  let statePaths = {};
+  let current = {};
+  let score = 0;
+  let streak = 0;
+
+  async function initMap() {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-albers-10m.json');
+    const us = await res.json();
+    const statesGeo = topojson.feature(us, us.objects.states).features;
+
+    const svg = d3.select("#us-map");
+    const pathGenerator = d3.geoPath();
+
+    statesGeo.forEach(f => {
+      const stateName = f.properties.name;
+      const path = svg.append("path")
+        .datum(f)
+        .attr("class", "state-default")
+        .attr("d", pathGenerator);
+
+      statePaths[stateName] = path;
+    });
+
+    document.getElementById('loading-msg').style.display = 'none';
+    document.getElementById('us-map').style.display = 'block';
+
+    loadNext();
+  }
+
+  async function loadNext() {
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('hint-box').innerHTML = '<button class="btn-hint" onclick="revealHint()">💡 Need a memory clue?</button>';
+
+    Object.values(statePaths).forEach(p => {
+      p.attr("class", "state-default");
+    });
+
+    const res = await fetch('/api/question');
+    current = await res.json();
+
+    if (statePaths[current.name]) {
+      statePaths[current.name].attr("class", "state-target");
+      statePaths[current.name].raise();
+    }
+
+    const optionsGrid = document.getElementById('options');
+    optionsGrid.innerHTML = '';
+    current.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerText = opt;
+      btn.onclick = () => selectOption(btn, opt);
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectOption(button, chosen) {
+    const allButtons = document.querySelectorAll('.opt-btn');
+    allButtons.forEach(b => b.disabled = true);
+
+    const activeState = statePaths[current.name];
+
+    if (chosen === current.name) {
+      button.classList.add('correct');
+      if (activeState) activeState.attr("class", "state-won");
+      score += 10;
+      streak += 1;
+    } else {
+      button.classList.add('wrong');
+      if (activeState) activeState.attr("class", "state-lost");
+      streak = 0;
+      allButtons.forEach(b => {
+        if (b.innerText === current.name) b.classList.add('correct');
+      });
+    }
+
+    document.getElementById('score').innerText = score;
+    document.getElementById('streak').innerText = streak;
+    document.getElementById('btn-next').style.display = 'block';
+  }
+
+  function revealHint() {
+    document.getElementById('hint-box').innerHTML = `<strong>Clue:</strong> ${current.hint}`;
+  }
+
+  initMap();
+</script>
+</body>
+</html>
