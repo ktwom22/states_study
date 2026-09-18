@@ -1,9 +1,10 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import random
+import os
 
 app = Flask(__name__)
 
-# Complete dataset with concrete visual memory clues for learning differences
+# --- STATES DATA (Kept intact) ---
 STATES = [
     {"name": "Alabama", "hint": "A flat-top building with a tiny heel at the bottom left.", "capital": "Montgomery"},
     {"name": "Alaska", "hint": "The Giant Whale swimming with a tail of island dots!", "capital": "Juneau"},
@@ -80,6 +81,11 @@ def map_mode():
     return render_template('map_mode.html')
 
 
+@app.route('/math')
+def math_mode():
+    return render_template('math_mode.html')
+
+
 @app.route('/api/question')
 def get_question():
     correct = random.choice(STATES)
@@ -95,8 +101,74 @@ def get_question():
     })
 
 
-import os
+# --- MIDDLE SCHOOL ALGEBRA GENERATOR ---
+@app.route('/api/math-question')
+def get_math_question():
+    level = request.args.get('level', default='1', type=str)
+
+    x = random.randint(2, 12)  # Target solution is always a clean whole number
+
+    if level == '1':
+        # One-Step: x + b = c or a * x = c
+        if random.random() < 0.5:
+            b = random.randint(3, 18)
+            c = x + b
+            eq = f"x + {b} = {c}"
+            hint = f"⚖️ Subtract {b} from both sides to leave x alone! ({c} - {b})"
+        else:
+            a = random.randint(2, 9)
+            c = a * x
+            eq = f"{a}x = {c}"
+            hint = f"⚖️ Divide both sides by {a}! ({c} ÷ {a})"
+
+    elif level == '2':
+        # Two-Step: ax + b = c or ax - b = c
+        a = random.randint(2, 6)
+        b = random.randint(2, 12)
+        if random.random() < 0.5:
+            c = (a * x) + b
+            eq = f"{a}x + {b} = {c}"
+            hint = f"Step 1: Subtract {b} from both sides ({c} - {b} = {c - b}).<br>Step 2: Divide by {a}!"
+        else:
+            c = (a * x) - b
+            eq = f"{a}x - {b} = {c}"
+            hint = f"Step 1: Add {b} to both sides ({c} + {b} = {c + b}).<br>Step 2: Divide by {a}!"
+
+    elif level == '3':
+        # Parentheses / Distribution: a(x + b) = c
+        a = random.randint(2, 5)
+        b = random.randint(1, 8)
+        c = a * (x + b)
+        eq = f"{a}(x + {b}) = {c}"
+        hint = f"Tip: Divide both sides by {a} first! (x + {b} = {c // a}), then subtract {b}."
+
+    else:  # Level 4: Variables on both sides: ax + b = cx + d
+        c_val = random.randint(2, 4)
+        a_val = c_val + random.randint(1, 4)  # Ensure a > c so x stays positive
+        b_val = random.randint(1, 10)
+        d_val = (a_val * x + b_val) - (c_val * x)
+        eq = f"{a_val}x + {b_val} = {c_val}x + {d_val}"
+        hint = f"Step 1: Subtract {c_val}x from both sides ({a_val - c_val}x).<br>Step 2: Subtract {b_val} from {d_val}, then divide!"
+
+    # Create 3 smart distractors close to the real answer
+    distractor_pool = set()
+    for delta in [-2, -1, 1, 2, 3, -3]:
+        candidate = x + delta
+        if candidate > 0:
+            distractor_pool.add(candidate)
+
+    distractors = list(distractor_pool)[:3]
+    options = [x] + distractors
+    random.shuffle(options)
+
+    return jsonify({
+        "equation": eq,
+        "answer": x,
+        "hint": hint,
+        "options": options
+    })
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5050))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)

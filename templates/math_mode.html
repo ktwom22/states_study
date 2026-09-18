@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Algebra Arena ⚡</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --card: #FFFFFF;
+      --primary: #4F46E5;
+      --accent: #F59E0B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --text: #1E293B;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: 'Quicksand', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+      touch-action: manipulation;
+    }
+    .nav-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: #E2E8F0;
+      padding: 6px;
+      border-radius: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-toggle a {
+      text-decoration: none;
+      color: #64748B;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .nav-toggle a.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .game-card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      color: var(--primary);
+      margin: 0 0 12px 0;
+      font-size: 1.8rem;
+    }
+    .level-pills {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .lvl-btn {
+      background: #F1F5F9;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #64748B;
+      transition: 0.2s;
+    }
+    .lvl-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: #EEF2FF;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .equation-board {
+      background: #1E293B;
+      color: #38BDF8;
+      border-radius: 16px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.25);
+    }
+    .sub-tag {
+      font-size: 0.85rem;
+      color: #94A3B8;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .eq-text {
+      font-family: 'Fredoka One', cursive;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+    }
+
+    /* TOOL BAR & SCRATCHPAD */
+    .tools-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding: 0 4px;
+    }
+    .tool-btn {
+      background: #EEF2FF;
+      color: var(--primary);
+      border: 1px solid #C7D2FE;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .tool-btn:hover {
+      background: #E0E7FF;
+    }
+    .scratchpad-container {
+      position: relative;
+      background: #0F172A;
+      border: 2px dashed #475569;
+      border-radius: 14px;
+      height: 140px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      touch-action: none; /* Crucial for stylus/finger drawing */
+    }
+    #scratchpad {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .scratch-hint {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 0.75rem;
+      color: #64748B;
+      pointer-events: none;
+      font-weight: 700;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    button.opt-btn {
+      background: #F8FAFC;
+      border: 2px solid #CBD5E1;
+      border-radius: 14px;
+      padding: 14px 8px;
+      font-size: 1.3rem;
+      font-family: 'Fredoka One', cursive;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button.opt-btn:hover:not(:disabled) {
+      background: #EEF2FF;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    button.correct {
+      background-color: var(--success) !important;
+      border-color: var(--success) !important;
+      color: #fff !important;
+    }
+    button.wrong {
+      background-color: var(--danger) !important;
+      border-color: var(--danger) !important;
+      color: #fff !important;
+    }
+    .hint-box {
+      font-size: 0.95rem;
+      color: #475569;
+      min-height: 40px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.35;
+    }
+    .btn-hint {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: underline;
+    }
+    .btn-next {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      width: 100%;
+      display: none;
+    }
+
+    /* POP-UP CALCULATOR MODAL */
+    .calc-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .calc-modal.open {
+      display: flex;
+    }
+    .calc-body {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 320px;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+    .calc-screen {
+      background: #F1F5F9;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.8rem;
+      text-align: right;
+      color: #0F172A;
+      margin-bottom: 16px;
+      min-height: 54px;
+      overflow-x: auto;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .calc-key {
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 14px 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .calc-key:active {
+      transform: scale(0.95);
+      background: #E2E8F0;
+    }
+    .calc-key.op {
+      background: #EEF2FF;
+      color: var(--primary);
+      border-color: #C7D2FE;
+    }
+    .calc-key.eq {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .calc-close-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: #F1F5F9;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      color: #64748B;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-toggle">
+  <a href="/">🔍 Shapes</a>
+  <a href="/map">🗺️ Map</a>
+  <a href="/math" class="active">⚡ Algebra</a>
+</div>
+
+<div class="game-card">
+  <h1>Algebra Arena ⚡</h1>
+
+  <div class="level-pills">
+    <button class="lvl-btn active" onclick="setLevel('1', this)">1-Step</button>
+    <button class="lvl-btn" onclick="setLevel('2', this)">2-Step</button>
+    <button class="lvl-btn" onclick="setLevel('3', this)">Brackets</button>
+    <button class="lvl-btn" onclick="setLevel('4', this)">Both Sides</button>
+  </div>
+
+  <div class="stats-bar">
+    <div>⭐ Score: <span id="score">0</span></div>
+    <div>🔥 Streak: <span id="streak">0</span></div>
+  </div>
+
+  <div class="equation-board">
+    <div class="sub-tag">Find the value of x</div>
+    <div class="eq-text" id="eq-text">...</div>
+  </div>
+
+  <!-- TOOLBAR: Clear Canvas & Open Calculator -->
+  <div class="tools-bar">
+    <button class="tool-btn" onclick="openCalc()">🧮 Calculator</button>
+    <button class="tool-btn" onclick="clearCanvas()">🗑️ Clear Pad</button>
+  </div>
+
+  <!-- DIGITAL TOUCH SCRATCHPAD -->
+  <div class="scratchpad-container">
+    <div class="scratch-hint" id="pad-hint">✏️ Use finger or pencil to work out steps</div>
+    <canvas id="scratchpad"></canvas>
+  </div>
+
+  <div class="hint-box" id="hint-box">
+    <button class="btn-hint" onclick="revealHint()">💡 Need a balancing clue?</button>
+  </div>
+
+  <div class="options-grid" id="options"></div>
+
+  <button class="btn-next" id="btn-next" onclick="loadNext()">Next Problem ➔</button>
+</div>
+
+<!-- POP-UP CALCULATOR DRAWER -->
+<div class="calc-modal" id="calc-modal" onclick="closeCalcOnOutside(event)">
+  <div class="calc-body" onclick="event.stopPropagation()">
+    <div class="calc-screen" id="calc-display">0</div>
+    <div class="calc-grid">
+      <button class="calc-key op" onclick="calcInput('C')">C</button>
+      <button class="calc-key op" onclick="calcInput('⌫')">⌫</button>
+      <button class="calc-key op" onclick="calcInput('/')">÷</button>
+      <button class="calc-key op" onclick="calcInput('*')">×</button>
+
+      <button class="calc-key" onclick="calcInput('7')">7</button>
+      <button class="calc-key" onclick="calcInput('8')">8</button>
+      <button class="calc-key" onclick="calcInput('9')">9</button>
+      <button class="calc-key op" onclick="calcInput('-')">−</button>
+
+      <button class="calc-key" onclick="calcInput('4')">4</button>
+      <button class="calc-key" onclick="calcInput('5')">5</button>
+      <button class="calc-key" onclick="calcInput('6')">6</button>
+      <button class="calc-key op" onclick="calcInput('+')">+</button>
+
+      <button class="calc-key" onclick="calcInput('1')">1</button>
+      <button class="calc-key" onclick="calcInput('2')">2</button>
+      <button class="calc-key" onclick="calcInput('3')">3</button>
+      <button class="calc-key eq" onclick="calcCalculate()">=</button>
+
+      <button class="calc-key" style="grid-column: span 2;" onclick="calcInput('0')">0</button>
+      <button class="calc-key" onclick="calcInput('.')">.</button>
+      <button class="calc-key op" onclick="toggleCalcSign()">±</button>
+    </div>
+    <button class="calc-close-btn" onclick="closeCalc()">Done / Back to Problem</button>
+  </div>
+</div>
+
+<script>
+  let current = {};
+  let currentLevel = '1';
+  let score = 0;
+  let streak = 0;
+
+  // --- SCRATCHPAD LOGIC (Canvas) ---
+  const canvas = document.getElementById('scratchpad');
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+
+  function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    ctx.strokeStyle = '#FBBF24'; // Bright yellow chalk/pencil
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    isDrawing = true;
+    document.getElementById('pad-hint').style.display = 'none';
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const pos = getCanvasPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function endDraw() {
+    isDrawing = false;
+  }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', endDraw);
+
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
+  canvas.addEventListener('touchend', endDraw);
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('pad-hint').style.display = 'block';
+  }
+
+  // --- CALCULATOR POP-UP LOGIC ---
+  let calcExpression = '0';
+
+  function openCalc() {
+    document.getElementById('calc-modal').classList.add('open');
+  }
+
+  function closeCalc() {
+    document.getElementById('calc-modal').classList.remove('open');
+  }
+
+  function closeCalcOnOutside(e) {
+    if (e.target.id === 'calc-modal') closeCalc();
+  }
+
+  function calcInput(char) {
+    const display = document.getElementById('calc-display');
+    if (char === 'C') {
+      calcExpression = '0';
+    } else if (char === '⌫') {
+      calcExpression = calcExpression.length > 1 ? calcExpression.slice(0, -1) : '0';
+    } else {
+      if (calcExpression === '0' && !['+', '-', '*', '/'].includes(char)) {
+        calcExpression = char;
+      } else {
+        calcExpression += char;
+      }
+    }
+    display.innerText = calcExpression;
+  }
+
+  function calcCalculate() {
+    const display = document.getElementById('calc-display');
+    try {
+      // Safe sanitized arithmetic evaluation
+      const sanitized = calcExpression.replace(/[^0-9+\-*/.]/g, '');
+      const result = Function(`'use strict'; return (${sanitized})`)();
+      calcExpression = String(Math.round(result * 1000) / 1000);
+      display.innerText = calcExpression;
+    } catch (err) {
+      display.innerText = 'Error';
+      calcExpression = '0';
+    }
+  }
+
+  function toggleCalcSign() {
+    if (calcExpression.startsWith('-')) {
+      calcExpression = calcExpression.slice(1);
+    } else if (calcExpression !== '0') {
+      calcExpression = '-' + calcExpression;
+    }
+    document.getElementById('calc-display').innerText = calcExpression;
+  }
+
+  // --- QUESTION & GAME STATE LOGIC ---
+  function setLevel(lvl, btn) {
+    currentLevel = lvl;
+    document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadNext();
+  }
+
+  async function loadNext() {
+    clearCanvas();
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('hint-box').innerHTML = '<button class="btn-hint" onclick="revealHint()">💡 Need a balancing clue?</button>';
+
+    const res = await fetch(`/api/math-question?level=${currentLevel}`);
+    current = await res.json();
+
+    document.getElementById('eq-text').innerText = current.equation;
+
+    const optionsGrid = document.getElementById('options');
+    optionsGrid.innerHTML = '';
+    current.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerText = `x = ${opt}`;
+      btn.onclick = () => selectOption(btn, opt);
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectOption(button, chosen) {
+    const allButtons = document.querySelectorAll('.opt-btn');
+    allButtons.forEach(b => b.disabled = true);
+
+    if (chosen === current.answer) {
+      button.classList.add('correct');
+      score += 10;
+      streak += 1;
+    } else {
+      button.classList.add('wrong');
+      streak = 0;
+      allButtons.forEach(b => {
+        if (b.innerText === `x = ${current.answer}`) b.classList.add('correct');
+      });
+    }
+
+    document.getElementById('score').innerText = score;
+    document.getElementById('streak').innerText = streak;
+    document.getElementById('btn-next').style.display = 'block';
+  }
+
+  function revealHint() {
+    document.getElementById('hint-box').innerHTML = current.hint;
+  }
+
+  // Initialize Canvas dimensions and load the first question
+  resizeCanvas();
+  loadNext();
+</script>
+</body>
+</html>

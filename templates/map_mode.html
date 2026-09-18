@@ -20,7 +20,12 @@
       --danger: #EF4444;
       --text: #1E293B;
     }
-    * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+    * {
+      box-sizing: border-box;
+      font-family: 'Quicksand', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
     body {
       background-color: var(--bg);
       color: var(--text);
@@ -30,6 +35,7 @@
       min-height: 100vh;
       margin: 0;
       padding: 16px;
+      touch-action: manipulation;
     }
     .nav-toggle {
       display: flex;
@@ -38,6 +44,8 @@
       background: #E2E8F0;
       padding: 6px;
       border-radius: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .nav-toggle a {
       text-decoration: none;
@@ -160,6 +168,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      line-height: 1.35;
     }
     .btn-hint {
       background: none;
@@ -187,13 +196,18 @@
       color: #94A3B8;
       font-weight: 700;
     }
+    @media (max-width: 480px) {
+      .map-container { height: 230px; }
+      .game-card { padding: 16px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="nav-toggle">
-  <a href="/">🔍 Single Shape Mode</a>
-  <a href="/map" class="active">🗺️ Full Map Mode</a>
+  <a href="/">🔍 Shapes</a>
+  <a href="/map" class="active">🗺️ Map</a>
+  <a href="/math">⚡ Algebra</a>
 </div>
 
 <div class="game-card">
